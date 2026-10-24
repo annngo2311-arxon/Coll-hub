@@ -1,0 +1,831 @@
+-- ==========================================
+-- SCRIPT NAME: c00lkidd CoolGUI Reborn v5.1 (FINAL FIX HUB)
+-- STYLE: Classic Red/Black Hacker GUI + Proper Reset On Toggle OFF
+-- EXECUTOR: Delta / Mobile Friendly
+-- ==========================================
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+local StarterGui = game:GetService("StarterGui")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Parent Helper an toàn cho Mobile
+local function getSafeGuiParent()
+    local playerGui = nil
+    pcall(function() playerGui = LocalPlayer:WaitForChild("PlayerGui", 5) end)
+    if playerGui then return playerGui end
+    local success, parent = pcall(function()
+        if type(gethui) == "function" then return gethui() end
+        return game:GetService("CoreGui")
+    end)
+    if success and parent then return parent end
+    return LocalPlayer:FindFirstChildOfClass("PlayerGui")
+end
+
+local targetParent = getSafeGuiParent()
+if not targetParent then return end
+
+pcall(function()
+    for _, child in ipairs(targetParent:GetChildren()) do
+        if child.Name == "c00lkidd_Genuine_CoolGUI" then child:Destroy() end
+    end
+end)
+
+-- Bảng màu c00lkidd Đỏ - Đen Hacker
+local C = {
+    bg = Color3.fromRGB(10, 10, 12),
+    sidebar = Color3.fromRGB(20, 5, 5),
+    content = Color3.fromRGB(15, 15, 18),
+    btn = Color3.fromRGB(35, 10, 10),
+    btnActive = Color3.fromRGB(140, 0, 0),
+    accent = Color3.fromRGB(255, 0, 0),
+    green = Color3.fromRGB(0, 255, 100),
+    text = Color3.fromRGB(255, 255, 255),
+    dark = Color3.fromRGB(25, 25, 30)
+}
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "c00lkidd_Genuine_CoolGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.DisplayOrder = 999999
+ScreenGui.Parent = targetParent
+
+-- Mobile Responsive Scale
+local MenuScale = Instance.new("UIScale")
+MenuScale.Scale = 1
+MenuScale.Parent = ScreenGui
+local function updateScale()
+    if not Camera then return end
+    local vp = Camera.ViewportSize
+    MenuScale.Scale = math.clamp(math.min(vp.X / 500, vp.Y / 340, 1), 0.65, 1)
+end
+updateScale()
+Camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+
+-- Hàm Kéo Thả Mobile chuẩn xác
+local function makeDraggable(frame, handle)
+    local dragging, dragStart, startPos
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            local conn
+            conn = UIS.InputChanged:Connect(function(move)
+                if dragging and (move.UserInputType == Enum.UserInputType.MouseMovement or move.UserInputType == Enum.UserInputType.Touch) then
+                    local delta = move.Position - dragStart
+                    frame.Position = UDim2.new(
+                        startPos.X.Scale, startPos.X.Offset + delta.X,
+                        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+                    )
+                end
+            end)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    if conn then conn:Disconnect() end
+                end
+            end)
+        end
+    end)
+end
+
+-- ===================== MAIN FRAME =====================
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 500, 0, 330)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -165)
+MainFrame.BackgroundColor3 = C.bg
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner") MainCorner.CornerRadius = UDim.new(0, 8) MainCorner.Parent = MainFrame
+local MainStroke = Instance.new("UIStroke") MainStroke.Color = C.accent MainStroke.Thickness = 2 MainStroke.Parent = MainFrame
+
+-- Title Bar
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 36)
+TitleBar.BackgroundColor3 = C.sidebar
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+makeDraggable(MainFrame, TitleBar)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -70, 1, 0)
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "c00lkidd CoolGUI Reborn v5.1 [FINAL FIX]"
+TitleLabel.TextColor3 = C.accent
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextSize = 16
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TitleBar
+
+-- Nút Thu Nhỏ (-) & Tắt (X)
+local MinBtn = Instance.new("TextButton")
+MinBtn.Size = UDim2.new(0, 26, 0, 25) MinBtn.Position = UDim2.new(1, -58, 0, 5)
+MinBtn.BackgroundColor3 = C.btn MinBtn.Text = "_" MinBtn.TextColor3 = C.text
+MinBtn.Font = Enum.Font.SourceSansBold MinBtn.Parent = TitleBar
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 26, 0, 25) CloseBtn.Position = UDim2.new(1, -28, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0) CloseBtn.Text = "X" CloseBtn.TextColor3 = C.text
+CloseBtn.Font = Enum.Font.SourceSansBold CloseBtn.Parent = TitleBar
+
+-- Icon Nút Nổi Launcher
+local Launcher = Instance.new("TextButton")
+Launcher.Size = UDim2.new(0, 50, 0, 50) Launcher.Position = UDim2.new(0, 15, 0.5, -25)
+Launcher.BackgroundColor3 = C.sidebar Launcher.Visible = false Launcher.Text = "c00l"
+Launcher.TextSize = 18 Launcher.TextColor3 = C.accent Launcher.Font = Enum.Font.SourceSansBold
+Launcher.Parent = ScreenGui
+local LCorner = Instance.new("UICorner") LCorner.CornerRadius = UDim.new(0, 10) LCorner.Parent = Launcher
+local LStroke = Instance.new("UIStroke") LStroke.Color = C.accent LStroke.Thickness = 2 LStroke.Parent = Launcher
+
+makeDraggable(Launcher, Launcher)
+
+-- ===================== SIDEBAR TABS =====================
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 125, 1, -36)
+Sidebar.Position = UDim2.new(0, 0, 0, 36)
+Sidebar.BackgroundColor3 = C.sidebar
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = MainFrame
+
+local TabList = Instance.new("UIListLayout")
+TabList.Padding = UDim.new(0, 4)
+TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+TabList.Parent = Sidebar
+
+local SidebarPad = Instance.new("UIPadding")
+SidebarPad.PaddingTop = UDim.new(0, 8)
+SidebarPad.Parent = Sidebar
+
+local ContentArea = Instance.new("Frame")
+ContentArea.Size = UDim2.new(1, -130, 1, -40)
+ContentArea.Position = UDim2.new(0, 130, 0, 38)
+ContentArea.BackgroundTransparency = 1
+ContentArea.Parent = MainFrame
+
+local tabs = {}
+
+local function createTab(tabName)
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Size = UDim2.new(0, 115, 0, 30)
+    tabBtn.BackgroundColor3 = C.btn
+    tabBtn.Text = tabName
+    tabBtn.TextColor3 = C.text
+    tabBtn.Font = Enum.Font.SourceSansBold
+    tabBtn.TextSize = 13
+    tabBtn.Parent = Sidebar
+    local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 4) c.Parent = tabBtn
+
+    local page = Instance.new("ScrollingFrame")
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Visible = false
+    page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    page.CanvasSize = UDim2.new(0,0,0,0)
+    page.ScrollBarThickness = 4
+    page.ScrollBarImageColor3 = C.accent
+    page.Parent = ContentArea
+
+    local list = Instance.new("UIListLayout")
+    list.Padding = UDim.new(0, 8)
+    list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    list.Parent = page
+
+    local pad = Instance.new("UIPadding")
+    pad.PaddingTop = UDim.new(0, 5)
+    pad.PaddingBottom = UDim.new(0, 10)
+    pad.Parent = page
+
+    tabBtn.Activated:Connect(function()
+        for _, t in pairs(tabs) do
+            t.btn.BackgroundColor3 = C.btn
+            t.page.Visible = false
+        end
+        tabBtn.BackgroundColor3 = C.btnActive
+        page.Visible = true
+    end)
+
+    tabs[tabName] = {btn = tabBtn, page = page}
+    return page
+end
+
+-- Tạo các Tab chuẩn mới
+local LocalTab = createTab("Player / Stats")
+local CombatTab = createTab("Combat / Aim")
+local SkyTab = createTab("Map / Visuals")
+local TrollTab = createTab("c00l Troll")
+local MiscTab = createTab("Misc / Teleport")
+
+tabs["Player / Stats"].btn.BackgroundColor3 = C.btnActive
+tabs["Player / Stats"].page.Visible = true
+
+-- ===================== HÀM COMPONENT =====================
+
+local function addToggle(page, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 340, 0, 35)
+    btn.BackgroundColor3 = C.btn
+    btn.Text = text .. ": OFF"
+    btn.TextColor3 = C.text
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    btn.Parent = page
+    local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 4) c.Parent = btn
+    local s = Instance.new("UIStroke") s.Color = C.accent s.Thickness = 1 s.Parent = btn
+
+    local state = false
+    btn.Activated:Connect(function()
+        state = not state
+        btn.Text = text .. (state and ": ON" or ": OFF")
+        btn.BackgroundColor3 = state and C.btnActive or C.btn
+        pcall(callback, state)
+    end)
+    return btn
+end
+
+local function addAction(page, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 340, 0, 35)
+    btn.BackgroundColor3 = C.btn
+    btn.Text = text
+    btn.TextColor3 = C.text
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    btn.Parent = page
+    local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 4) c.Parent = btn
+    local s = Instance.new("UIStroke") s.Color = C.accent s.Thickness = 0.8 s.Parent = btn
+
+    btn.Activated:Connect(function()
+        pcall(callback, btn)
+    end)
+    return btn
+end
+
+local function addSlider(page, title, minVal, maxVal, defaultVal, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0, 340, 0, 45)
+    container.BackgroundColor3 = C.dark
+    container.Parent = page
+    local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 4) c.Parent = container
+    local s = Instance.new("UIStroke") s.Color = C.accent s.Thickness = 0.8 s.Parent = container
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -10, 0, 20)
+    lbl.Position = UDim2.new(0, 5, 0, 2)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = title .. ": " .. defaultVal
+    lbl.TextColor3 = C.text
+    lbl.Font = Enum.Font.SourceSansBold
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = container
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(1, -20, 0, 10)
+    bar.Position = UDim2.new(0, 10, 0, 26)
+    bar.BackgroundColor3 = C.btn
+    bar.Parent = container
+    local bc = Instance.new("UICorner") bc.CornerRadius = UDim.new(0, 3) bc.Parent = bar
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((defaultVal - minVal)/(maxVal - minVal), 0, 1, 0)
+    fill.BackgroundColor3 = C.accent
+    fill.Parent = bar
+    local fc = Instance.new("UICorner") fc.CornerRadius = UDim.new(0, 3) fc.Parent = fill
+
+    local currVal = defaultVal
+    local dragging = false
+
+    bar.InputBegan:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then dragging = true end
+    end)
+    UIS.InputEnded:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then dragging = false end
+    end)
+    UIS.InputChanged:Connect(function(inp)
+        if dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+            local ratio = math.clamp((inp.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+            currVal = math.floor(minVal + (maxVal - minVal) * ratio)
+            fill.Size = UDim2.new(ratio, 0, 1, 0)
+            lbl.Text = title .. ": " .. currVal
+            pcall(callback, currVal)
+        end
+    end)
+end
+
+-- ===================== TAB 1: PLAYER / STATS =====================
+
+local realSpeedActive, customSpeed = false, 16
+addToggle(LocalTab, "Bật Real Speed God (Max 10000)", function(state)
+    realSpeedActive = state
+    if not state and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = 16 end
+    end
+end)
+addSlider(LocalTab, "Speed Level", 16, 10000, 100, function(val)
+    customSpeed = val
+end)
+
+RunService.RenderStepped:Connect(function()
+    if realSpeedActive and LocalPlayer.Character then
+        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hrp and hum then
+            hum.WalkSpeed = customSpeed
+            if hum.MoveDirection.Magnitude > 0 then
+                hrp.CFrame = hrp.CFrame + (hum.MoveDirection * (customSpeed / 50))
+            end
+        end
+    end
+end)
+
+local realJumpActive, customJump = false, 50
+addToggle(LocalTab, "Bật Real Jump Power (Max 10000)", function(state)
+    realJumpActive = state
+    if not state and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.UseJumpPower = true
+            hum.JumpPower = 50
+        end
+    end
+end)
+addSlider(LocalTab, "Jump Level", 50, 10000, 150, function(val)
+    customJump = val
+end)
+
+RunService.Heartbeat:Connect(function()
+    if realJumpActive and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.UseJumpPower = true
+            hum.JumpPower = customJump
+        end
+    end
+end)
+
+local noclipOn = false
+addToggle(LocalTab, "Ghost Noclip (Xuyên Tường)", function(state) noclipOn = state end)
+RunService.Stepped:Connect(function()
+    if noclipOn and LocalPlayer.Character then
+        for _, p in ipairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end
+    end
+end)
+
+local infJumpOn = false
+addToggle(LocalTab, "Inf Jump (Nhảy Không Khí Vô Hạn)", function(state) infJumpOn = state end)
+UIS.JumpRequest:Connect(function()
+    if infJumpOn and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+local flyOn = false
+local flyBodyVel, flyBodyGyro = nil, nil
+addToggle(LocalTab, "c00l Infinite Fly (Bay Không Rơi)", function(state)
+    flyOn = state
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    if flyOn then
+        flyBodyVel = Instance.new("BodyVelocity", hrp)
+        flyBodyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        flyBodyVel.Velocity = Vector3.zero
+        flyBodyGyro = Instance.new("BodyGyro", hrp)
+        flyBodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        flyBodyGyro.CFrame = hrp.CFrame
+    else
+        if flyBodyVel then flyBodyVel:Destroy() end
+        if flyBodyGyro then flyBodyGyro:Destroy() end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if flyOn and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LocalPlayer.Character.HumanoidRootPart
+        if flyBodyVel and flyBodyGyro then
+            flyBodyGyro.CFrame = Camera.CFrame
+            flyBodyVel.Velocity = Camera.CFrame.LookVector * 70
+        end
+    end
+end)
+
+local autoClickerOn = false
+addToggle(LocalTab, "Auto Clicker (Tự Động Click Sâu)", function(state) autoClickerOn = state end)
+task.spawn(function()
+    while true do
+        if autoClickerOn then
+            pcall(function()
+                mouse1click()
+            end)
+        end
+        task.wait(0.05)
+    end
+end)
+
+addAction(LocalTab, "Reset / Shatter Character", function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.Health = 0 end
+end)
+
+-- ===================== TAB 2: COMBAT / AIM =====================
+
+local aimlockActive = false
+addToggle(CombatTab, "Pure Aimlock (Khóa Kẻ Địch Chuẩn)", function(state) aimlockActive = state end)
+
+RunService.RenderStepped:Connect(function()
+    if not aimlockActive then return end
+    local myChar = LocalPlayer.Character
+    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+        local myRoot = myChar.HumanoidRootPart
+        local closest, dist = nil, math.huge
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character.Humanoid.Health > 0 then
+                local eRoot = p.Character.HumanoidRootPart
+                local d = (myRoot.Position - eRoot.Position).Magnitude
+                if d < dist then dist = d closest = eRoot end
+            end
+        end
+        if closest then
+            myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(closest.Position.X, myRoot.Position.Y, closest.Position.Z))
+        end
+    end
+end)
+
+local superAimActive = false
+addToggle(CombatTab, "Super Headshot Aim (Khóa Đầu 100%)", function(state) superAimActive = state end)
+
+RunService.RenderStepped:Connect(function()
+    if not superAimActive then return end
+    pcall(function()
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local myRoot = myChar.HumanoidRootPart
+            local closestHead, minDist = nil, math.huge
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character.Humanoid.Health > 0 then
+                    local h = p.Character.Head
+                    local d = (myRoot.Position - h.Position).Magnitude
+                    if d < minDist then minDist = d closestHead = h end
+                end
+            end
+            if closestHead then myRoot.CFrame = CFrame.new(myRoot.Position, closestHead.Position) end
+        end
+    end)
+end)
+
+local godModeActive = false
+addToggle(CombatTab, "God Mode (Bất Tử Vĩnh Viễn)", function(state) godModeActive = state end)
+RunService.Heartbeat:Connect(function()
+    if godModeActive and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.Health = hum.MaxHealth end
+    end
+end)
+
+local hitboxExpanderOn = false
+addToggle(CombatTab, "Hitbox Expander (To Đầu Địch Gấp 5 Lần)", function(state)
+    hitboxExpanderOn = state
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+            p.Character.Head.Size = state and Vector3.new(10, 10, 10) or Vector3.new(2, 1, 1)
+            p.Character.Head.Transparency = state and 0.5 or 0
+            p.Character.Head.CanCollide = not state
+        end
+    end
+end)
+
+local killAuraOn = false
+addToggle(CombatTab, "Kill Aura (Tự Đánh Kẻ Địch Xung Quanh)", function(state) killAuraOn = state end)
+RunService.RenderStepped:Connect(function()
+    if not killAuraOn then return end
+    pcall(function()
+        local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not myRoot then return end
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local eRoot = p.Character.HumanoidRootPart
+                if (myRoot.Position - eRoot.Position).Magnitude < 15 then
+                    myRoot.CFrame = eRoot.CFrame * CFrame.new(0, 0, 2)
+                end
+            end
+        end
+    end)
+end)
+
+-- ===================== TAB 3: MAP / VISUALS =====================
+
+addAction(SkyTab, "c00lkidd Custom Skybox", function()
+    local sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky", Lighting)
+    local img = "rbxassetid://152648053"
+    sky.SkyboxBk, sky.SkyboxDn, sky.SkyboxFt, sky.SkyboxLf, sky.SkyboxRt, sky.SkyboxUp = img, img, img, img, img, img
+end)
+
+local discoOn = false
+addToggle(SkyTab, "Disco Party Sky (Chớp Nháy Màu Sắc)", function(state) discoOn = state end)
+task.spawn(function()
+    while true do
+        if discoOn then
+            Lighting.Ambient = Color3.fromRGB(math.random(0,255), math.random(0,255), math.random(0,255))
+        end
+        task.wait(0.2)
+    end
+end)
+
+local espActive = false
+local espHighlights = {}
+addToggle(SkyTab, "Hacker Red ESP (Nhìn Xuyên Tường Toàn Bản Đồ)", function(state)
+    espActive = state
+    if espActive then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local hl = Instance.new("Highlight")
+                hl.FillColor = Color3.fromRGB(255, 0, 0)
+                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                hl.Parent = p.Character
+                espHighlights[p] = hl
+            end
+        end
+    else
+        for _, hl in pairs(espHighlights) do if hl then hl:Destroy() end end
+        espHighlights = {}
+    end
+end)
+
+addAction(SkyTab, "FullBright (Sáng Rực Rỡ Toàn Map)", function()
+    Lighting.Brightness = 3.5
+    Lighting.ClockTime = 12
+    Lighting.GlobalShadows = false
+end)
+
+addAction(SkyTab, "Xóa Cây Cối & Rác (Tối Ưu FPS)", function()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        pcall(function()
+            if obj:IsA("BasePart") then
+                local name = string.lower(obj.Name)
+                if string.find(name, "tree") or string.find(name, "rock") or string.find(name, "bush") or string.find(name, "leaf") then
+                    obj:Destroy()
+                end
+            end
+        end)
+    end
+end)
+
+local chamsOn = false
+addToggle(SkyTab, "Chameleons (Nhân Vật Phát Sáng Neon)", function(state)
+    chamsOn = state
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            for _, part in ipairs(p.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Material = state and Enum.Material.Neon or Enum.Material.SmoothPlastic
+                    part.Color = state and Color3.fromRGB(0, 255, 255) or Color3.fromRGB(163, 162, 165)
+                end
+            end
+        end
+    end
+end)
+
+-- ===================== TAB 4: c00l TROLL =====================
+
+local spinOn = false
+addToggle(TrollTab, "Spinbot 360 (Xoay Tít Cuồng Phong)", function(state) spinOn = state end)
+RunService.RenderStepped:Connect(function()
+    if spinOn and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame *= CFrame.Angles(0, math.rad(90), 0)
+    end
+end)
+
+local flingOn = false
+addToggle(TrollTab, "Touch Fling All (Đụng Ai Người Đó Bay Vút)", function(state) flingOn = state end)
+RunService.Heartbeat:Connect(function()
+    if flingOn and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LocalPlayer.Character.HumanoidRootPart
+        local v = hrp.AssemblyLinearVelocity
+        hrp.AssemblyLinearVelocity = Vector3.new(30000, 30000, 30000)
+        RunService.RenderStepped:Wait()
+        hrp.AssemblyLinearVelocity = v
+    end
+end)
+
+addAction(TrollTab, "Spam Decals Map (Nhuộm Đỏ c00lkidd)", function()
+    pcall(function()
+        for _, part in ipairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") then
+                for _, face in ipairs(Enum.NormalId:GetEnumItems()) do
+                    local d = Instance.new("Decal")
+                    d.Texture = "rbxassetid://152648053"
+                    d.Face = face
+                    d.Parent = part
+                end
+            end
+        end
+    end)
+end)
+
+addAction(TrollTab, "Fake Chat c00lkidd (Thông Báo Ảo)", function()
+    pcall(function()
+        StarterGui:SetCore("ChatMakeSystemMessage", {
+            Text = "[c00lkidd]: HỆ THỐNG ĐÃ BỊ HACK. CHUẨN BỊ SỤP ĐỔ!";
+            Color = Color3.fromRGB(255, 0, 0);
+            Font = Enum.Font.SourceSansBold;
+            TextSize = 20;
+        })
+    end)
+end)
+
+local antiKickOn = false
+addToggle(TrollTab, "Anti Kick / Anti Ban (Bảo Vệ Tài Khoản)", function(state) antiKickOn = state end)
+pcall(function()
+    local mt = getrawmetatable(game)
+    local oldNamecall = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        if antiKickOn and method == "Kick" and self == LocalPlayer then
+            return
+        end
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
+end)
+
+-- ===================== TAB 5: MISC / TELEPORT & TARGET =====================
+
+local selectedTargetPlayer = nil
+
+local targetContainer = Instance.new("Frame")
+targetContainer.Size = UDim2.new(0, 340, 0, 110)
+targetContainer.BackgroundColor3 = C.dark
+targetContainer.Parent = MiscTab
+local tc = Instance.new("UICorner") tc.CornerRadius = UDim.new(0, 4) tc.Parent = targetContainer
+local ts = Instance.new("UIStroke") ts.Color = C.accent ts.Thickness = 0.8 ts.Parent = targetContainer
+
+local tLbl = Instance.new("TextLabel")
+tLbl.Size = UDim2.new(1, 0, 0, 20)
+tLbl.Position = UDim2.new(0, 5, 0, 2)
+tLbl.BackgroundTransparency = 1
+tLbl.Text = "CHỌN MỤC TIÊU: (Chưa Chọn)"
+tLbl.TextColor3 = C.green
+tLbl.Font = Enum.Font.SourceSansBold
+tLbl.TextSize = 13
+tLbl.TextXAlignment = Enum.TextXAlignment.Left
+tLbl.Parent = targetContainer
+
+local pScroll = Instance.new("ScrollingFrame")
+pScroll.Size = UDim2.new(1, -10, 0, 80)
+pScroll.Position = UDim2.new(0, 5, 0, 24)
+pScroll.BackgroundTransparency = 1
+pScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+pScroll.CanvasSize = UDim2.new(0,0,0,0)
+pScroll.ScrollBarThickness = 3
+pScroll.Parent = targetContainer
+
+local pList = Instance.new("UIListLayout")
+pList.Padding = UDim.new(0, 3)
+pList.Parent = pScroll
+
+local function updatePlayerList()
+    for _, child in ipairs(pScroll:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            local pBtn = Instance.new("TextButton")
+            pBtn.Size = UDim2.new(1, -5, 0, 25)
+            pBtn.BackgroundColor3 = (selectedTargetPlayer == p) and C.btnActive or C.btn
+            pBtn.Text = p.Name
+            pBtn.TextColor3 = C.text
+            pBtn.Font = Enum.Font.SourceSansBold
+            pBtn.TextSize = 12
+            pBtn.Parent = pScroll
+            local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 3) c.Parent = pBtn
+
+            pBtn.Activated:Connect(function()
+                if selectedTargetPlayer == p then
+                    selectedTargetPlayer = nil
+                    tLbl.Text = "CHỌN MỤC TIÊU: (Chưa Chọn)"
+                else
+                    selectedTargetPlayer = p
+                    tLbl.Text = "ĐÃ CHỌN: " .. p.Name
+                end
+                updatePlayerList()
+            end)
+        end
+    end
+end
+updatePlayerList()
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+
+addAction(MiscTab, "Teleport Đến Mục Tiêu Đã Chọn", function()
+    if selectedTargetPlayer and selectedTargetPlayer.Character and selectedTargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = selectedTargetPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+    end
+end)
+
+local targetLockActive = false
+addToggle(MiscTab, "Target Lock (Khóa Góc Nhìn Mục Tiêu)", function(state)
+    targetLockActive = state
+end)
+
+RunService.RenderStepped:Connect(function()
+    if targetLockActive and selectedTargetPlayer and selectedTargetPlayer.Character and selectedTargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local myChar = LocalPlayer.Character
+        if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, selectedTargetPlayer.Character.HumanoidRootPart.Position)
+        end
+    end
+end)
+
+addAction(MiscTab, "Teleport Đến Người Gần Nhất", function()
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+    local closest, minDist = nil, math.huge
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local d = (myRoot.Position - p.Character.HumanoidRootPart.Position).Magnitude
+            if d < minDist then minDist = d closest = p.Character.HumanoidRootPart end
+        end
+    end
+    if closest then myRoot.CFrame = closest.CFrame * CFrame.new(0, 0, 3) end
+end)
+
+addAction(MiscTab, "Fast Rejoin Server", function()
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+end)
+
+addAction(MiscTab, "Hop Server Khác (Server Hop)", function()
+    pcall(function()
+        local raw = game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+        local res = game:GetService("HttpService"):JSONDecode(raw)
+        for _, s in ipairs(res.data) do
+            if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer)
+                return
+            end
+        end
+    end)
+end)
+
+-- ===================== XỬ LÝ NÚT THU NHỎ & TẮT MENU =====================
+
+MinBtn.Activated:Connect(function()
+    MainFrame.Visible = false
+    Launcher.Visible = true
+end)
+
+Launcher.Activated:Connect(function()
+    MainFrame.Visible = true
+    Launcher.Visible = false
+end)
+
+CloseBtn.Activated:Connect(function()
+    realSpeedActive = false
+    realJumpActive = false
+    noclipOn = false
+    infJumpOn = false
+    flyOn = false
+    autoClickerOn = false
+    aimlockActive = false
+    superAimActive = false
+    godModeActive = false
+    hitboxExpanderOn = false
+    killAuraOn = false
+    discoOn = false
+    espActive = false
+    chamsOn = false
+    spinOn = false
+    flingOn = false
+    targetLockActive = false
+    antiKickOn = false
+    
+    -- Trả lại tốc độ và nhảy mặc định khi tắt hẳn GUI
+    if LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = 16
+            hum.UseJumpPower = true
+            hum.JumpPower = 50
+        end
+    end
+
+    if flyBodyVel then flyBodyVel:Destroy() end
+    if flyBodyGyro then flyBodyGyro:Destroy() end
+    for _, hl in pairs(espHighlights) do if hl then hl:Destroy() end end
+    ScreenGui:Destroy()
+end)
+
+print("c00lkidd CoolGUI Reborn v5.1 FINAL FIX Loaded Successfully!")
